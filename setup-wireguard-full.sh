@@ -118,7 +118,7 @@ systemctl enable --now dnscrypt-proxy
 echo "   dnscrypt-proxy запущен на 127.0.0.1:53"
 
 # ========================
-# 8. УСТАНОВКА WIREGUARD-UI (ВЕБ-ИНТЕРФЕЙС)
+# 8. УСТАНОВКА WIREGUARD-UI (ВЕБ-ИНТЕРФЕЙС) - ИСПРАВЛЕНО
 # ========================
 echo "🖥 Установка WireGuard-UI (веб-интерфейс)..."
 mkdir -p "$UI_DIR"
@@ -126,11 +126,25 @@ cd "$UI_DIR"
 
 # Исправленная загрузка wg-easy
 echo "   Скачивание последней версии wg-easy..."
-LATEST_RELEASE=$(curl -s https://api.github.com/repos/WeeJeWel/wg-easy/releases/latest | jq -r '.tag_name')
+# Получаем тег из поля 'tag_name' и убираем возможные кавычки или лишние символы
+LATEST_RELEASE=$(curl -s https://api.github.com/repos/WeeJeWel/wg-easy/releases/latest | jq -r '.tag_name // empty' | tr -d '"')
+
+if [[ -z "$LATEST_RELEASE" || "$LATEST_RELEASE" == "null" ]]; then
+    echo "   ❗ Не удалось получить последнюю версию wg-easy, используем фоллбэк: v2.1.0"
+    LATEST_RELEASE="v2.1.0"
+fi
+
 echo "   Последняя версия: $LATEST_RELEASE"
 curl -L "https://github.com/WeeJeWel/wg-easy/releases/download/${LATEST_RELEASE}/wg-easy_linux_amd64.tar.gz" -o wg-easy.tar.gz
-tar xzf wg-easy.tar.gz
-rm wg-easy.tar.gz
+
+if [[ -f wg-easy.tar.gz ]]; then
+    tar xzf wg-easy.tar.gz
+    rm wg-easy.tar.gz
+    echo "   wg-easy успешно установлен."
+else
+    echo "   ❌ Ошибка: Файл wg-easy.tar.gz не был скачан."
+    exit 1
+fi
 
 # Создаём systemd-юнит
 cat <<EOF > /etc/systemd/system/wg-easy.service
