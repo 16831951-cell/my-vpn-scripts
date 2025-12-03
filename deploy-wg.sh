@@ -1,0 +1,3 @@
+#!/bin/bashapt update && apt upgrade -ycurl -sSL https://get.docker.com | shdocker run -d   --name=wg-easy   --network host   -e WG_HOST=$1   -e PASSWORD=$2   -e WG_PERSISTENT_KEEPALIVE=25   -e WG_DEFAULT_ADDRESS="10.8.0.x"   -v ~/.wg-easy:/etc/wireguard   --cap-add=NET_ADMIN   --cap-add=SYS_MODULE   --restart unless-stopped   weejewel/wg-easyecho 'net.ipv4.ip_forward=1' >> /etc/sysctl.confsysctl -piptables -t nat -A POSTROUTING -o eth0 -j MASQUERADEiptables -A FORWARD -i wg0 -j ACCEPTiptables -A FORWARD -o wg0 -j ACCEPTiptables -P FORWARD ACCEPTecho "WG-Easy deployed! Access: http://$1:51821"
+
+Использование:chmod +x deploy-wg.sh./deploy-wg.sh YOUR_SERVER_IP YOUR_PASSWORD
